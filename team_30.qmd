@@ -602,9 +602,9 @@ Despite its usefulness, we encountered real limitations:
 
 ---
 
-## 📝 Full Prompt Log
+## 📝 Partial Prompt Log
 
-For full transparency, here is a log of all major prompts submitted to Perplexity AI
+For full transparency, here is a log of some of the major prompts submitted to Perplexity AI
 during this assessment:
 
 1. > *"I have a CSV where rows are home teams and columns are away teams with scores in
