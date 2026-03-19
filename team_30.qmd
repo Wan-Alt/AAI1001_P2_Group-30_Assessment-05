@@ -501,9 +501,8 @@ The drawdown analysis confirms our hypothesis that volatility increases from Gol
 
 # Task 4: Reflection on the Use of GenAI
 
-###🤖 GenAI Tool Used
 
-Our team used **[Perplexity AI](https://www.perplexity.ai)** as our primary GenAI assistant
+Our team used a number of GenAI Models to cross check for correctness but **[Perplexity AI](https://www.perplexity.ai)** was used as our primary GenAI assistant
 throughout this assessment. Unlike a standard chatbot, Perplexity combines large language
 model capabilities with real-time web search, making it especially useful for up-to-date
 package documentation and code debugging.
@@ -516,12 +515,12 @@ We also cross-referenced:
 
 ---
 
-### 💡 How the Tool Helped Us
+## 💡 How the Tool Helped Us
 
 The tool assisted us at **every stage** of the workflow. Below are concrete examples with
 the actual prompts we used.
 
-#### 1. Parsing Match Results
+### 1. Parsing Match Results
 
 We were unsure how to loop over a wide-format matrix and produce two rows per match
 (one for home, one for away). We submitted this prompt:
@@ -533,7 +532,7 @@ We were unsure how to loop over a wide-format matrix and produce two rows per ma
 Perplexity generated the nested `for` loop with `str_split()` and `case_when()` — the
 core logic of our solution — in under a minute.
 
-#### 2. GT Table Styling
+### 2. GT Table Styling
 
 The `gt` package API is extensive. Rather than reading the full documentation, we used
 targeted prompts such as:
@@ -562,7 +561,7 @@ Perplexity immediately identified that YAML front matter cannot be executed in t
 Console — it is only valid when Quarto renders the full `.qmd` file. This saved us from
 a potentially lengthy debugging session.
 
-#### 4. Quarto Document Structure
+### 4. Quarto Document Structure
 
 We used the following prompt to set up the document correctly:
 
@@ -572,7 +571,7 @@ We used the following prompt to set up the document correctly:
 
 ---
 
-### ⏱️ Time Saved: With vs. Without GenAI
+## ⏱️ Time Saved: With vs. Without GenAI
 
 | Task | Est. Without GenAI | Actual With GenAI |
 |---|---|---|
@@ -584,7 +583,7 @@ We used the following prompt to set up the document correctly:
 
 ---
 
-### ⚠️ Challenges with the Tool
+## ⚠️ Challenges with the Tool
 
 Despite its usefulness, we encountered real limitations:
 
@@ -603,7 +602,7 @@ Despite its usefulness, we encountered real limitations:
 
 ---
 
-### 📝 Full Prompt Log
+## 📝 Full Prompt Log
 
 For full transparency, here is a log of all major prompts submitted to Perplexity AI
 during this assessment:
@@ -633,7 +632,7 @@ during this assessment:
 
 ---
 
-### 💬 Final Thoughts
+## 💬 Final Thoughts
 
 GenAI compressed roughly **155 minutes of estimated work into ~37 minutes** — a 4x
 productivity gain. However, this only worked because we used it as a **Collaborative Partner**, not an answer machine. The workflow that served us best was:
