@@ -1,12 +1,37 @@
 ---
-title: "Team 30 - Assignment 2 Teamwork"
-author: "Goh Jason Fadil (2502643), Venus Low (2503741), Choong Wan Qin (2402311), Chi Wei Seng (2401493), Koh Soon Chuan (2400951)"
+title: "Week 11 Lab: Skill Wrap-Up"
+subtitle: "AAI1001 – Data Engineering and Visualization | AY25/26 Tri 2 | Assessment 5 (Teamwork 2)"
+date: today
+date-format: "dddd MMM DD, YYYY"
+author:
+  - name: "Goh Jason Fadil (2502643)"
+    affiliations:
+      - name: "Singapore Institute of Technology"
+  - name: "Venus Low (2503741)"
+    affiliations:
+      - name: "Singapore Institute of Technology"
+  - name: "Choong Wan Qin (2402311)"
+    affiliations:
+      - name: "Singapore Institute of Technology"
+  - name: "Chi Wei Seng (2401493)"
+    affiliations:
+      - name: "Singapore Institute of Technology"
+  - name: "Koh Soon Chuan (2400951)"
+    affiliations:
+      - name: "Singapore Institute of Technology"
+
 format:
   html:
-    theme: cosmo
-    toc: true
-    toc-depth: 2
     embed-resources: true
+    number-sections: true
+    toc: true
+    toc-depth: 3
+    toc-title: "Table of Contents"
+    toc-location: left
+    theme: flatly
+    highlight-style: github
+    code-fold: false
+    df-print: paged
 execute:
   echo: true
   warning: false
@@ -19,16 +44,17 @@ This section of the document contains the **English Premier League 2019/20 Final
 
 ---
 
-### Load Libraries
+## Load Libraries
 
 ```{r}
 library(tidyverse)
+library(readxl)
 library(gt)
 ```
 
 ---
 
-### Load Data
+## Load Data
 
 ```{r}
 results_raw <- read_csv("epl_results.csv")
@@ -39,7 +65,7 @@ teams <- teams_df$abbr
 
 ---
 
-### Parse Match Results
+## Parse Match Results
 
 Each match is parsed into two rows — one per team — recording goals scored, goals conceded, and points earned.
 
@@ -82,7 +108,7 @@ matches <- bind_rows(records)
 
 ---
 
-### Aggregate & Rank Teams
+## Aggregate & Rank Teams
 
 Teams are ranked by **points**, then **goal difference**, then **goals scored** as tiebreakers.
 
@@ -104,7 +130,7 @@ league <- matches |>
 
 ---
 
-### Generate League Table
+## Generate League Table
 
 Top 4 qualify for the **UEFA Champions League** (highlighted in blue); bottom 3 are **relegated** (highlighted in red).
 
@@ -206,6 +232,151 @@ league |>
 ---
 
 # Task 2: Investment Market Price Analysis
+
+## Analyzing and Visualizing DJIA Data
+
+::: {.callout-note}
+**Dataset:** Dow Jones Industrial Average (DJIA) monthly closing values from May 1896 to present, sourced from the Bloomberg DJIA Performance Report.
+:::
+
+This section covers the import, cleaning, and exploratory analysis of the Dow Jones Industrial Average (DJIA) monthly performance data sourced from Bloomberg.
+
+### Import and Clean Data
+
+The raw Excel file contains 5 header rows of metadata before the actual data begins. We skip these and extract only the two relevant columns — `Effective Date` and `Close Value` — coercing them to the appropriate R types.
+
+```{r}
+#| label: import-data
+
+library(tidyverse)
+library(readxl)
+
+monthly_dj <- read_excel("dja-performance-report-monthly.xlsx", skip = 5) |>
+  select(`Effective Date`, `Close Value`) |>
+  rename(date = `Effective Date`, close_value = `Close Value`) |>
+  mutate(
+    date = as.Date(date, format = "%m/%d/%Y"),
+    close_value = as.numeric(close_value)
+  ) |>
+  drop_na() |>
+  arrange(date)
+
+monthly_dj |> slice_head(n = 10)
+```
+
+### Identify Gap Months
+
+We identify months where the gap to the next recorded date exceeds one month, indicating missing data in the series. The `months_to_next_row` column captures the number of calendar months between each row and the one that follows it.
+
+```{r}
+#| label: gap-months
+
+gap_months <- monthly_dj |>
+  mutate(
+    month = month(date),
+    year = year(date),
+    months_to_next_row = interval(date, lead(date)) %/% months(1)
+  ) |>
+  filter(months_to_next_row > 1) |>
+  select(date, close_value, month, year, months_to_next_row)
+
+gap_months
+```
+
+::: {.callout-important}
+**Historical Context:** The gap spans August to December 1914 — five missing months. This coincides with the New York Stock Exchange closure at the outbreak of World War I, as European nations liquidated US securities, threatening financial panic. The NYSE suspended trading from July 31 to December 12, 1914.
+:::
+
+### Visualizing DJIA Performance by Month
+
+Monthly relative returns are computed and visualised using two complementary approaches to reveal distributional patterns across the calendar year. The `rel_change_pct` column captures the month-on-month percentage change in closing value, and `month_abb` provides an ordered factor for correct calendar ordering in plots.
+
+```{r}
+#| label: append-columns
+
+monthly_dj <- monthly_dj |>
+  mutate(
+    rel_change_pct = (close_value / lag(close_value) - 1) * 100,
+    month_abb = factor(month.abb[month(date)], levels = month.abb)
+  )
+```
+
+#### Visualization A — Violin and Box Plots
+
+The violin plot shows the full distribution of monthly returns, while the overlaid box plot highlights the interquartile range and median. The red line connects successive monthly medians to reveal any seasonal trends across the year.
+
+```{r}
+#| label: vis-a
+#| fig-width: 10
+#| fig-height: 6
+
+median_line <- monthly_dj |>
+  drop_na(rel_change_pct) |>
+  group_by(month_abb) |>
+  summarise(median_val = median(rel_change_pct))
+
+monthly_dj |>
+  drop_na(rel_change_pct) |>
+  ggplot(aes(x = month_abb, y = rel_change_pct)) +
+  geom_violin(fill = "steelblue", alpha = 0.4, trim = FALSE) +
+  geom_boxplot(width = 0.2, outlier.shape = NA, coef = 0) +
+  geom_line(
+    data = median_line,
+    aes(x = month_abb, y = median_val, group = 1),
+    colour = "firebrick", linewidth = 0.8
+  ) +
+  geom_point(
+    data = median_line,
+    aes(x = month_abb, y = median_val),
+    colour = "firebrick", size = 2
+  ) +
+  labs(
+    title = "DJIA Monthly Returns — Violin and Box Plots",
+    subtitle = "Red line connects successive monthly medians",
+    caption = "Source: Bloomberg DJIA Performance Report",
+    x = "Month",
+    y = "Relative Change (%)"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(plot.title = element_text(face = "bold"))
+```
+
+#### Visualization B — Faceted Frequency Polygons
+
+Each facet shows the distribution of monthly returns as a frequency polygon with a rug plot along the x-axis indicating individual observations. The dashed red vertical line marks the mean return for each month.
+
+```{r}
+#| label: vis-b
+#| fig-width: 10
+#| fig-height: 10
+
+mean_line <- monthly_dj |>
+  drop_na(rel_change_pct) |>
+  group_by(month_abb) |>
+  summarise(mean_val = mean(rel_change_pct))
+
+monthly_dj |>
+  drop_na(rel_change_pct) |>
+  ggplot(aes(x = rel_change_pct)) +
+  geom_freqpoly(binwidth = 2, colour = "steelblue") +
+  geom_rug(alpha = 0.4) +
+  geom_vline(
+    data = mean_line,
+    aes(xintercept = mean_val),
+    linetype = "dashed",
+    colour = "firebrick"
+  ) +
+  facet_wrap(~ month_abb, nrow = 4, ncol = 3) +
+  labs(
+    title = "DJIA Monthly Returns — Frequency Polygons by Month",
+    subtitle = "Dashed red line indicates the mean return per month",
+    caption = "Source: Bloomberg DJIA Performance Report",
+    x = "Relative Change (%)",
+    y = "Count"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(plot.title = element_text(face = "bold"))
+```
 
 ---
 
