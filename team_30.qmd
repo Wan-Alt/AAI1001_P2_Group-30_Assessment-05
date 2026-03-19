@@ -515,7 +515,7 @@ We also cross-referenced:
 
 ---
 
-## 💡 How the Tool Helped Us
+## How GenAI assisted us
 
 The tool assisted us at **every stage** of the workflow. Below are concrete examples with
 the actual prompts we used.
@@ -544,7 +544,7 @@ targeted prompts such as:
 
 This allowed us to apply conditional formatting confidently without trial and error.
 
-#### 3. Debugging the YAML Error
+### Debugging the YAML Error
 
 Early on we encountered this error while testing code in the R Console:
 
@@ -571,7 +571,7 @@ We used the following prompt to set up the document correctly:
 
 ---
 
-## ⏱️ Time Saved: With vs. Without GenAI
+## Time Saved: With vs. Without GenAI
 
 | Task | Est. Without GenAI | Actual With GenAI |
 |---|---|---|
@@ -583,7 +583,7 @@ We used the following prompt to set up the document correctly:
 
 ---
 
-## ⚠️ Challenges with the Tool
+## Challenges we faced
 
 Despite its usefulness, we encountered real limitations:
 
@@ -602,7 +602,7 @@ Despite its usefulness, we encountered real limitations:
 
 ---
 
-## 📝 Partial Prompt Log
+## Partial Prompt Log
 
 For full transparency, here is a log of some of the major prompts submitted to Perplexity AI
 during this assessment:
@@ -632,7 +632,7 @@ during this assessment:
 
 ---
 
-## 💬 Final Thoughts
+## Closing Thoughts
 
 GenAI compressed roughly **155 minutes of estimated work into ~37 minutes** — a 4x
 productivity gain. However, this only worked because we used it as a **Collaborative Partner**, not an answer machine. The workflow that served us best was:
