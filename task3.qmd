@@ -1,0 +1,95 @@
+---
+title: "task3"
+format: 
+  html:
+    code-fold: true
+    toc: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## Load Libraries
+```{r}
+library(plotly)
+library(tidyverse)
+tourism <- read_csv("singapore_tourism_receipts.csv")
+```
+
+## Data Preparation
+```{r}
+tourism_clean <- tourism |>
+  mutate(
+    value_billion = value / 1000,
+    quarter = factor(quarter, levels = unique(quarter)),
+    item = factor(item, levels = c(
+      "Sightseeing, Entertainment & Gaming",
+      "Shopping",
+      "Other Components",
+      "Food & Beverage",
+      "Accommodation"
+    ))
+  )
+```
+
+## Visualisation
+```{r}
+p <- ggplot(tourism_clean, aes(
+  x = quarter,
+  y = value_billion,
+  color = item,
+  group = item,
+  text = paste0(
+    "Quarter: ", quarter,
+    "<br>Category: ", item,
+    "<br>Amount: ", round(value_billion, 2), " Billion SGD"
+  )
+)) +
+  geom_line(size = 0.7) +
+  geom_point(size = 1) +
+
+  labs(
+    x = "Quarter",
+    y = "Billion SGD",
+    color = "",
+
+  ) +
+  
+  scale_y_continuous(
+    limits = c(0, 10),
+    breaks = seq(0, 10, by = 2)
+  ) +
+  
+  guides(color = guide_legend(nrow = 2)) +
+
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 7, angle = 45, hjust = 1), 
+    axis.text.y = element_text(size = 10),
+    legend.position = "top",
+    plot.title = element_text(size = 14, face = "bold"),
+
+  ) 
+
+ggplotly(p, tooltip = "text") |>
+  layout(
+    title = list(
+      text = "Singapore 2019-2024 Quarterly Tourism Receipts<br>By Major Components",
+      x = 0.5,
+      y = 0.9,
+      font = list(size = 14)
+    ),
+    legend = list(
+      orientation = "h",
+      x = 0.5,
+      xanchor = "center",
+      y = 0.9,   # push legend ABOVE
+      font = list(size = 8)
+    ),
+    margin = list(t = 100),
+    height = 400
+  )
+```
+
+
