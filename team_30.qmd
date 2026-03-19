@@ -520,7 +520,7 @@ We also cross-referenced:
 The tool assisted us at **every stage** of the workflow. Below are concrete examples with
 the actual prompts we used.
 
-### 1. Parsing Match Results
+### Parsing Match Results
 
 We were unsure how to loop over a wide-format matrix and produce two rows per match
 (one for home, one for away). We submitted this prompt:
@@ -532,7 +532,7 @@ We were unsure how to loop over a wide-format matrix and produce two rows per ma
 Perplexity generated the nested `for` loop with `str_split()` and `case_when()` — the
 core logic of our solution — in under a minute.
 
-### 2. GT Table Styling
+### GT Table Styling
 
 The `gt` package API is extensive. Rather than reading the full documentation, we used
 targeted prompts such as:
@@ -561,7 +561,7 @@ Perplexity immediately identified that YAML front matter cannot be executed in t
 Console — it is only valid when Quarto renders the full `.qmd` file. This saved us from
 a potentially lengthy debugging session.
 
-### 4. Quarto Document Structure
+### Quarto Document Structure
 
 We used the following prompt to set up the document correctly:
 
