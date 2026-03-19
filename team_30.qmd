@@ -1,0 +1,218 @@
+---
+title: "Team 30 - Assignment 2 Teamwork"
+author: "Goh Jason Fadil (2502643), Venus Low (2503741), Choong Wan Qin (2402311), Chi Wei Seng (2401493), Koh Soon Chuan (2400951)"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+# Task 1: English Premier League Table 2019–2020
+
+This section of the document contains the **English Premier League 2019/20 Final Standings** from raw match results using `tidyverse` for data wrangling and `gt` for table styling.
+
+---
+
+### Load Libraries
+
+```{r}
+library(tidyverse)
+library(gt)
+```
+
+---
+
+### Load Data
+
+```{r}
+results_raw <- read_csv("epl_results.csv")
+teams_df    <- read_csv("epl_teams.csv")
+
+teams <- teams_df$abbr
+```
+
+---
+
+### Parse Match Results
+
+Each match is parsed into two rows — one per team — recording goals scored, goals conceded, and points earned.
+
+```{r}
+records <- list()
+
+for (i in seq_len(nrow(results_raw))) {
+  home <- results_raw$home_team[i]
+
+  for (away in teams) {
+    if (away == home) next
+
+    score <- results_raw[[away]][i]
+    if (is.na(score) || score == "-") next
+
+    parts <- str_split(score, "-")[[1]]
+    hg    <- as.integer(parts[1])
+    ag    <- as.integer(parts[2])
+
+    # Home team row
+    records[[length(records) + 1]] <- tibble(
+      team          = home,
+      goals_for     = hg,
+      goals_against = ag,
+      pts           = case_when(hg > ag ~ 3L, hg == ag ~ 1L, TRUE ~ 0L)
+    )
+
+    # Away team row
+    records[[length(records) + 1]] <- tibble(
+      team          = away,
+      goals_for     = ag,
+      goals_against = hg,
+      pts           = case_when(ag > hg ~ 3L, ag == hg ~ 1L, TRUE ~ 0L)
+    )
+  }
+}
+
+matches <- bind_rows(records)
+```
+
+---
+
+### Aggregate & Rank Teams
+
+Teams are ranked by **points**, then **goal difference**, then **goals scored** as tiebreakers.
+
+```{r}
+league <- matches |>
+  group_by(team) |>
+  summarise(
+    points        = sum(pts),
+    goals_scored  = sum(goals_for),
+    goals_against = sum(goals_against),
+    .groups       = "drop"
+  ) |>
+  mutate(goal_diff = goals_scored - goals_against) |>
+  arrange(desc(points), desc(goal_diff), desc(goals_scored)) |>
+  mutate(rank = row_number()) |>
+  left_join(teams_df |> rename(team_full = name), by = c("team" = "abbr")) |>
+  select(rank, team = team_full, points, goal_diff, goals_scored)
+```
+
+---
+
+### Generate League Table
+
+Top 4 qualify for the **UEFA Champions League** (highlighted in blue); bottom 3 are **relegated** (highlighted in red).
+
+```{r}
+league |>
+  gt() |>
+
+  # Title & subtitle
+  tab_header(
+    title    = md("**\u26bd Premier League 2019/20 \u2014 Final Standings**"),
+    subtitle = md("*Points \u00b7 Goal Difference \u00b7 Goals Scored*")
+  ) |>
+
+  # Column labels
+  cols_label(
+    rank         = md("**#**"),
+    team         = md("**Club**"),
+    points       = md("**Pts**"),
+    goal_diff    = md("**GD**"),
+    goals_scored = md("**GF**")
+  ) |>
+
+  # Alignment
+  cols_align(align = "center", columns = c(rank, points, goal_diff, goals_scored)) |>
+  cols_align(align = "left",   columns = team) |>
+
+  # Row striping
+  opt_row_striping() |>
+
+  # Font
+  opt_table_font(font = list(google_font("Roboto"), default_fonts())) |>
+
+  # Global table options
+  tab_options(
+    heading.background.color       = "#38003c",
+    heading.title.font.size        = px(20),
+    heading.subtitle.font.size     = px(13),
+    column_labels.background.color = "#00ff85",
+    column_labels.font.weight      = "bold",
+    column_labels.font.size        = px(13),
+    row.striping.background_color  = "#f9f9f9",
+    table.border.top.color         = "#38003c",
+    table.border.bottom.color      = "#38003c",
+    table_body.hlines.color        = "#e0e0e0",
+    table.font.size                = px(13),
+    data_row.padding               = px(6)
+  ) |>
+
+  # White text on dark purple heading
+  tab_style(
+    style     = list(cell_text(color = "white", weight = "bold")),
+    locations = cells_title(groups = c("title", "subtitle"))
+  ) |>
+
+  # Top 4 — Champions League — blue
+  tab_style(
+    style     = list(cell_fill(color = "#cce5ff"), cell_text(weight = "bold")),
+    locations = cells_body(rows = rank <= 4)
+  ) |>
+
+  # Bottom 3 — Relegation — red
+  tab_style(
+    style     = list(cell_fill(color = "#ffd6d6"), cell_text(color = "#cc0000")),
+    locations = cells_body(rows = rank >= 18)
+  ) |>
+
+  # Bold rank column
+  tab_style(
+    style     = cell_text(weight = "bold"),
+    locations = cells_body(columns = rank)
+  ) |>
+
+  # Positive GD in green
+  tab_style(
+    style     = cell_text(color = "#007a33", weight = "bold"),
+    locations = cells_body(columns = goal_diff, rows = goal_diff > 0)
+  ) |>
+
+  # Negative GD in red
+  tab_style(
+    style     = cell_text(color = "#cc0000", weight = "bold"),
+    locations = cells_body(columns = goal_diff, rows = goal_diff < 0)
+  ) |>
+
+  # Source note legend
+  tab_source_note(
+    source_note = md(
+      "\U0001f535 Top 4: **UEFA Champions League** &nbsp;|&nbsp; \U0001f534 Bottom 3: **Relegated**"
+    )
+  ) |>
+
+  # Champion footnote
+  tab_footnote(
+    footnote  = md("\U0001f3c6 **League Champions**"),
+    locations = cells_body(columns = team, rows = rank == 1)
+  )
+```
+
+---
+
+# Task 2: Investment Market Price Analysis
+
+---
+
+# Task 3: Visualizing Singapore Tourists Spending 
+
+---
+
+# Task 4: Reflection on the Use of GenAI
+
+---
