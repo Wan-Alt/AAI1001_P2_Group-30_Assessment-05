@@ -44,7 +44,7 @@ This section of the document contains the **English Premier League 2019/20 Final
 
 ---
 
-## 1.1 Load Libraries
+## Load Libraries
 
 ```{r}
 library(tidyverse)
@@ -54,7 +54,7 @@ library(gt)
 
 ---
 
-## 1.2 Load Data
+## Load Data
 
 ```{r}
 results_raw <- read_csv("epl_results.csv")
@@ -65,7 +65,7 @@ teams <- teams_df$abbr
 
 ---
 
-## 1.3 Parse Match Results
+## Parse Match Results
 
 Each match is parsed into two rows — one per team — recording goals scored, goals conceded, and points earned.
 
@@ -108,7 +108,7 @@ matches <- bind_rows(records)
 
 ---
 
-## 1.4 Aggregate & Rank Teams
+## Aggregate & Rank Teams
 
 Teams are ranked by **points**, then **goal difference**, then **goals scored** as tiebreakers.
 
@@ -130,7 +130,7 @@ league <- matches |>
 
 ---
 
-## 1.5 Generate League Table
+## Generate League Table
 
 Top 4 qualify for the **UEFA Champions League** (highlighted in blue); bottom 3 are **relegated** (highlighted in red).
 
