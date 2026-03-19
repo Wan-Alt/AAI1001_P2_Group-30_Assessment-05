@@ -1,0 +1,109 @@
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(tidyquant)
+library(gt)
+```
+```{r}
+#| label: task-2-2-1
+
+ticker_btc <- "BTC-USD"
+ticker_gold <- "GC=F"
+start_date <- "2015-01-01"
+end_date <- "2026-02-28"
+
+monthly_btc <- tq_get(ticker_btc, from = start_date, to = end_date) |>
+  drop_na(adjusted) |>
+  tq_transmute(select = adjusted, mutate_fun = to.period, period = "months")
+
+monthly_gold <- tq_get(ticker_gold, from = start_date, to = end_date) |>
+  drop_na(adjusted) |>
+  tq_transmute(select = adjusted, mutate_fun = to.period, period = "months")
+
+head(monthly_btc, 10)
+head(monthly_gold, 10)
+```
+
+```{r}
+#| label: task-2-2-dj
+
+monthly_dj <- tq_get("^DJI", from = "2015-01-01", to = "2026-02-28") |>
+  drop_na(adjusted) |>
+  tq_transmute(select = adjusted, mutate_fun = to.period, period = "months") |>
+  rename(date = date, close_value = adjusted)
+```
+
+
+```{r}
+#| label: task-2-2-2
+#| fig-width: 10
+#| fig-height: 6
+
+# Standardise each asset into same 3-column format
+dj_plot <- monthly_dj |>
+  select(month = date, close_value) |>
+  mutate(asset = "DJIA")
+
+btc_plot <- monthly_btc |>
+  select(month = date, close_value = adjusted) |>
+  mutate(asset = "BTC")
+
+gold_plot <- monthly_gold |>
+  select(month = date, close_value = adjusted) |>
+  mutate(asset = "Gold")
+
+# Stack all 3 into one long data frame
+combined <- bind_rows(dj_plot, btc_plot, gold_plot) |>
+  mutate(asset = factor(asset, levels = c("DJIA", "BTC", "Gold")))
+
+ggplot(combined, aes(x = month, y = close_value, color = asset)) +
+  geom_line(linewidth = 0.8) +
+  facet_wrap(~asset, scales = "free_y", ncol = 1) +
+  scale_color_manual(values = c("DJIA" = "steelblue", 
+                                 "BTC" = "orange", 
+                                 "Gold" = "gold3")) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  labs(
+    title = "Monthly Closing Prices: DJIA, BTC, and Gold (2015–2026)",
+    x = "Date",
+    y = "Price (USD)",
+    color = "Asset"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "none")
+```
+
+```{r}
+#| label: task-2-2-3
+
+compute_drawdown <- function(prices) {
+  drawdowns <- numeric(length(prices))
+  peak <- prices[1]
+  for (i in seq_along(prices)) {
+    if (prices[i] > peak) peak <- prices[i]
+    drawdowns[i] <- (prices[i] - peak) / peak * 100
+  }
+  return(drawdowns)
+}
+
+drawdowns_gold <- compute_drawdown(monthly_gold$adjusted)
+drawdowns_dj   <- compute_drawdown(monthly_dj$close_value)
+drawdowns_btc  <- compute_drawdown(monthly_btc$adjusted)
+
+biggest_drawdown_gold <- min(drawdowns_gold)
+biggest_drawdown_dj   <- min(drawdowns_dj)
+biggest_drawdown_btc  <- min(drawdowns_btc)
+
+biggest_drawdown_gold
+biggest_drawdown_dj
+biggest_drawdown_btc
+```
+The drawdown analysis confirms our hypothesis that volatility increases from Gold to DJIA to BTC. Gold recorded the smallest largest drawdown at approximately -17.07%, reflecting its reputation as a stable store of value over centuries. The DJIA showed a moderate drawdown of -23.20%, consistent with the broader stock market's resilience over time. BTC, however, experienced the largest drawdown at approximately -75.57%, validating its classification as a highly volatile speculative asset. These results support the conclusion that volatility increases progressively from Gold to DJIA to BTC.
+
+
+
